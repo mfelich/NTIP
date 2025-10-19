@@ -1,37 +1,29 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaHeart, FaSearch, FaBox, FaUsers, FaInfoCircle, FaUser } from "react-icons/fa";
+import { FaHeart, FaBox, FaUsers, FaInfoCircle, FaUser } from "react-icons/fa";
+import FavoriteItem from "./FavoriteItem";
 
 const Header = ({ username, onLogout }) => {
   const [showFavorites, setShowFavorites] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   const handleLoginClick = () => navigate("/login");
   const handleRegisterClick = () => navigate("/register");
   const handleProductsClick = () => navigate("/");
-  const handleUsersClick = () => navigate("/users");
+  const handleUsersClick = () => navigate("/user-view");
   const handleAboutClick = () => navigate("/about");
   const handleHomeClick = () => navigate("/");
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery("");
-    }
-  };
-
   return (
     <>
-      <div className="w-full py-4 px-6 lg:px-20 bg-white flex items-center justify-between mb-8 shadow-lg border-b border-gray-200">
+      <div className="w-full py-4 px-6 lg:px-20 bg-white flex items-center justify-between shadow-lg border-b border-gray-200">
         {/* Logo/Home */}
         <div className="flex items-center justify-start">
           <button
             onClick={handleHomeClick}
             className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-blue-700 transition-all duration-300"
           >
-            ShopApp
+            Biddora
           </button>
         </div>
 
@@ -63,28 +55,7 @@ const Header = ({ username, onLogout }) => {
             </button>
           </nav>
 
-          <form onSubmit={handleSearch} className="relative flex-1 max-w-md">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FaSearch className="w-4 h-4 text-gray-400" />
-              </div>
-
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-all duration-200"
-                placeholder="Search products..."
-              />
-
-              <button
-                type="submit"
-                className="absolute right-1 top-1 bottom-1 text-purple-700 bg-white hover:text-white hover:bg-gradient-to-r hover:from-purple-500 hover:via-purple-600 hover:to-purple-700 border border-purple-700 focus:ring-2 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-sm px-4 transition-all duration-200"
-              >
-                Search
-              </button>
-            </div>
-          </form>
+        
         </div>
 
         {/* User Actions */}
@@ -167,13 +138,7 @@ const Header = ({ username, onLogout }) => {
           <span className="text-xs mt-1">Products</span>
         </button>
         
-        <button
-          onClick={handleSearch}
-          className="flex flex-col items-center text-gray-600 hover:text-purple-600 transition-colors"
-        >
-          <FaSearch className="w-5 h-5" />
-          <span className="text-xs mt-1">Search</span>
-        </button>
+
         
         {username ? (
           <button
@@ -197,25 +162,5 @@ const Header = ({ username, onLogout }) => {
   );
 };
 
-// Placeholder za FavoriteItem komponentu
-const FavoriteItem = ({ user, setShowFavorites }) => {
-  return (
-    <div className="w-80 bg-white rounded-xl shadow-2xl border border-gray-200 p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="font-semibold text-gray-800">Your Favorites</h3>
-        <button 
-          onClick={() => setShowFavorites(false)}
-          className="text-gray-400 hover:text-gray-600"
-        >
-          ×
-        </button>
-      </div>
-      <div className="text-center py-8 text-gray-500">
-        <FaHeart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p>No favorite items yet</p>
-      </div>
-    </div>
-  );
-};
 
 export default Header;

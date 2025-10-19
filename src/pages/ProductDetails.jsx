@@ -52,7 +52,7 @@ const ProductDetails = () => {
 
   return (
     <>
-      <div className="w-full flex px-20 space-x-10 items-start">
+      <div className="w-full flex px-20 space-x-10 items-start mt-8">
         <div className="w-8/12">
           <div className="bg-white px-6 py-4 rounded-md shadow-md">
             <ProductHeader name={product?.name} description={product?.description} />

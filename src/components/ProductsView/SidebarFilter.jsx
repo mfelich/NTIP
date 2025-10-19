@@ -205,36 +205,7 @@ const SidebarFilter = () => {
           </div>
         </div>
 
-        {/* Additional Filters Section */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800">Additional Filters</h3>
-          
-          <div className="space-y-3">
-            <label className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all duration-200">
-              <input 
-                type="checkbox" 
-                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-              />
-              <span className="text-sm font-medium text-gray-700">Free Shipping</span>
-            </label>
-            
-            <label className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all duration-200">
-              <input 
-                type="checkbox" 
-                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-              />
-              <span className="text-sm font-medium text-gray-700">Verified Sellers Only</span>
-            </label>
-            
-            <label className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all duration-200">
-              <input 
-                type="checkbox" 
-                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-              />
-              <span className="text-sm font-medium text-gray-700">Buy Now Available</span>
-            </label>
-          </div>
-        </div>
+
       </div>
 
       {/* Action Buttons */}

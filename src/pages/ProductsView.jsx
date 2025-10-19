@@ -8,13 +8,27 @@ const ProductsView = () => {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = 0, search = "") => {
     setError("");
+    setLoading(true);
     try {
       const token = localStorage.getItem("token");
+      
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: '10' // You can adjust page size as needed
+      });
+      
+      if (search) {
+        params.append('name', search);
+      }
 
-      const response = await fetch(`http://localhost:8080/api/products/all`, {
+      const response = await fetch(`http://localhost:8080/api/products/all?${params}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -23,25 +37,59 @@ const ProductsView = () => {
       });
 
       if (!response.ok) {
-        setError("Error while fetching products");
-        console.log(error);
+        throw new Error("Error while fetching products");
       }
 
       const data = await response.json();
       setProducts(data.content);
-      console.log(data);
+      setTotalPages(data.totalPages);
+      setCurrentPage(data.number);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Search functionality can be implemented here
+    setCurrentPage(0); // Reset to first page when searching
+    fetchProducts(0, searchQuery);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchProducts(page, searchQuery);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setCurrentPage(0);
+    fetchProducts(0, "");
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    let startPage = Math.max(0, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 1);
+    
+    // Adjust start page if we're near the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(0, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
   };
 
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(0, "");
   }, []);
 
   return (
@@ -93,7 +141,7 @@ const ProductsView = () => {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="block w-full p-4 pl-11 text-gray-900 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-all duration-300"
+                      className="block w-full p-2 pl-11 text-gray-900 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-all duration-300"
                       placeholder="Search products..."
                     />
 
@@ -106,96 +154,112 @@ const ProductsView = () => {
                     </button>
                   </div>
                 </form>
-              </div>
-
-              {/* Product card lists */}
-              <div className="space-y-6 mb-8">
-                {products.length > 0 ? (
-                  products.map((product) => (
-                    <div 
-                      key={product.id} 
-                      className="transform hover:scale-[1.02] transition-transform duration-300"
+                
+                {/* Clear search button */}
+                {searchQuery && (
+                  <div className="text-center mt-2">
+                    <button
+                      onClick={handleClearSearch}
+                      className="text-sm text-purple-600 hover:text-purple-700 font-medium"
                     >
-                      <ProductCard product={product} />
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FaSearch className="w-10 h-10 text-gray-400" />
-                    </div>
-                    <p className="text-gray-500 text-lg font-medium">No products to display.</p>
-                    <p className="text-gray-400 mt-2">Products will appear here once they are available.</p>
+                      Clear search
+                    </button>
                   </div>
                 )}
               </div>
 
+              {/* Loading state */}
+              {loading && (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-500">Loading products...</p>
+                </div>
+              )}
+
+              {/* Product card lists */}
+              {!loading && (
+                <div className="space-y-6 mb-8">
+                  {products.length > 0 ? (
+                    products.map((product) => (
+                      <div 
+                        key={product.id} 
+                        className="transform hover:scale-[1.02] transition-transform duration-300"
+                      >
+                        <ProductCard product={product} />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <FaSearch className="w-10 h-10 text-gray-400" />
+                      </div>
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchQuery ? "No products found for your search." : "No products to display."}
+                      </p>
+                      <p className="text-gray-400 mt-2">
+                        {searchQuery ? "Try adjusting your search terms." : "Products will appear here once they are available."}
+                      </p>
+                      {searchQuery && (
+                        <button
+                          onClick={handleClearSearch}
+                          className="mt-4 text-purple-600 hover:text-purple-700 font-medium"
+                        >
+                          Clear search
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Page navigation */}
-              <div className="w-full flex items-center justify-center">
-                <nav aria-label="Page navigation example">
-                  <ul className="inline-flex -space-x-px text-sm shadow-lg rounded-xl overflow-hidden">
-                    <li>
-                      <a
-                        href="#"
-                        className="flex items-center justify-center px-4 h-10 ms-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                      >
-                        <FaArrowLeft className="w-3 h-3 mr-2" />
-                        Previous
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                      >
-                        1
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                      >
-                        2
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        aria-current="page"
-                        className="flex items-center justify-center px-4 h-10 text-white border border-purple-500 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 transition-all duration-200"
-                      >
-                        3
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                      >
-                        4
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                      >
-                        5
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200"
-                      >
-                        Next
-                        <FaArrowRight className="w-3 h-3 ml-2" />
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+              {totalPages > 1 && !loading && (
+                <div className="w-full flex items-center justify-center">
+                  <nav aria-label="Page navigation">
+                    <ul className="inline-flex -space-x-px text-sm shadow-lg rounded-xl overflow-hidden">
+                      {/* Previous button */}
+                      <li>
+                        <button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 0}
+                          className="flex items-center justify-center px-4 h-10 ms-0 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                        >
+                          <FaArrowLeft className="w-3 h-3 mr-2" />
+                          Previous
+                        </button>
+                      </li>
+
+                      {/* Page numbers */}
+                      {getPageNumbers().map((page) => (
+                        <li key={page}>
+                          <button
+                            onClick={() => handlePageChange(page)}
+                            className={`flex items-center justify-center px-4 h-10 leading-tight border border-gray-300 transition-all duration-200 ${
+                              currentPage === page
+                                ? 'text-white bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600'
+                                : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700'
+                            }`}
+                          >
+                            {page + 1}
+                          </button>
+                        </li>
+                      ))}
+
+                      {/* Next button */}
+                      <li>
+                        <button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages - 1}
+                          className="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                        >
+                          Next
+                          <FaArrowRight className="w-3 h-3 ml-2" />
+                        </button>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              )}
             </div>
           </div>
         </div>

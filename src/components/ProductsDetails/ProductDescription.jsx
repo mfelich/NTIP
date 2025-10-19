@@ -1,17 +1,27 @@
-import React from 'react'
+import React from 'react';
+import { FaAlignLeft, FaInfoCircle } from 'react-icons/fa';
 
-const ProductDescription = () => {
+const ProductDescription = ({ description = "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Iusto velit omnis quaerat ad nam, doloremque perspiciatis eum doloribus dolor perferendis autem veniam amet atque. Repudiandae eius ea dolores modi soluta." }) => {
   return (
+    <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+      <div className="flex items-center mb-4">
+        <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center mr-3 shadow-md">
+          <FaAlignLeft className="w-4 h-4 text-white" />
+        </div>
+        <h2 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent">
+          Description
+        </h2>
+      </div>
 
-    <>
-    {/* Description */}
-     <div className="bg-white px-6 py-4 mb-8 rounded-lg shadow-md">
-      <h1 className="component-title mb-4">Description</h1>
-      <p className="text-description">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Iusto velit omnis quaerat ad nam, doloremque perspiciatis eum doloribus dolor perferendis autem veniam amet atque. Repudiandae eius ea dolores modi soluta.
-     </p>
+      <div className="flex items-start">
+        <FaInfoCircle className="w-4 h-4 text-green-500 mt-1 mr-3 flex-shrink-0" />
+        <p className="text-gray-600 leading-relaxed text-base">
+          {description}
+        </p>
+      </div>
+
     </div>
-    </>
-  )
+  );
 }
 
-export default ProductDescription
+export default ProductDescription;

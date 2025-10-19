@@ -1,6 +1,7 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 import LoginForm from "./components/LoginForm";
 import RegisterForm from "./components/RegisterForm";
 import ProductsView from "./pages/ProductsView"
@@ -55,9 +56,12 @@ useEffect(() => {
           <Route path="/" element={<ProductsView />} />
           <Route path="/login" element={<LoginForm onLogin={handleLogin} />} />
           <Route path="/register" element={<RegisterForm />} />
+          <Route path="/user-view/" element={isAuthenticated ?(<UsersView />) : (<LoginForm onLogin={handleLogin} />)} />
           <Route path="/user-profile/:userId" element={isAuthenticated ?(<UserDetails />) : (<LoginForm onLogin={handleLogin} />)} />
           <Route path="/product-details/:productId" element={isAuthenticated ?(<ProductDetails />) : (<LoginForm onLogin={handleLogin} />)} />
         </Routes>
+
+        <Footer></Footer>
       </BrowserRouter>
     </>
   );
