@@ -4,14 +4,11 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #F1F4F5;
-}
 
 @layer components {
 
   body{
-    @apply font-sans;
+    @apply font-sans bg-gradient-to-br from-purple-50;;
   }
 
   .component-title {

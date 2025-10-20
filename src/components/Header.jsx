@@ -1,17 +1,18 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaHeart, FaBox, FaUsers, FaInfoCircle, FaUser } from "react-icons/fa";
+import { FaHeart,FaChevronDown,FaSignOutAlt, FaBox, FaUsers, FaInfoCircle, FaUser } from "react-icons/fa";
 import FavoriteItem from "./FavoriteItem";
 
 const Header = ({ username, onLogout }) => {
   const [showFavorites, setShowFavorites] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
 
   const handleLoginClick = () => navigate("/login");
   const handleRegisterClick = () => navigate("/register");
   const handleProductsClick = () => navigate("/");
   const handleUsersClick = () => navigate("/user-view");
-  const handleAboutClick = () => navigate("/about");
+  const handleAboutClick = () => navigate("/about-us");
   const handleHomeClick = () => navigate("/");
 
   return (
@@ -61,46 +62,73 @@ const Header = ({ username, onLogout }) => {
         {/* User Actions */}
         {username ? (
           <div className="flex items-center justify-end space-x-4">
-            {/* Favorites */}
-            <div className="relative">
-              <button
-                onClick={() => setShowFavorites(!showFavorites)}
-                className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200 relative group"
-              >
-                <FaHeart className="w-5 h-5" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  3
-                </div>
-              </button>
+  {/* Favorites */}
+  <div className="relative">
+    <button
+      onClick={() => setShowFavorites(!showFavorites)}
+      className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200 relative group"
+    >
+      <FaHeart className="w-5 h-5" />
+      <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+        2
+      </div>
+    </button>
 
-              {/* Favorites Popup */}
-              {showFavorites && (
-                <div className="absolute right-0 mt-2 z-50">
-                  <FavoriteItem 
-                    user={username}
-                    setShowFavorites={setShowFavorites}
-                  />
-                </div>
-              )}
-            </div>
+    {/* Favorites Popup */}
+    {showFavorites && (
+      <div className="absolute right-0 mt-2 z-50">
+        <FavoriteItem 
+          user={username}
+          setShowFavorites={setShowFavorites}
+        />
+      </div>
+    )}
+  </div>
 
-            {/* User Profile */}
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 text-gray-700">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-                  <FaUser className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-sm font-medium hidden sm:block">{username}</span>
-              </div>
-              
-              <button
-                onClick={onLogout}
-                className="text-sm text-gray-500 hover:text-red-500 font-medium transition-colors duration-200"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
+  {/* User Profile */}
+  <div className="flex items-center space-x-3">
+    <div className="relative">
+      <button
+        onClick={() => setShowUserMenu(!showUserMenu)}
+        className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors duration-200"
+      >
+        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+          <FaUser className="w-4 h-4 text-white" />
+        </div>
+        <span className="text-sm font-medium hidden sm:block">{username}</span>
+        <FaChevronDown className={`w-3 h-3 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+      </button>
+
+      {/* User Menu Popup */}
+      {showUserMenu && (
+        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+          <button
+            onClick={() => {
+              navigate("/my-profile");
+              setShowUserMenu(false);
+            }}
+            className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors duration-200"
+          >
+            <FaUser className="w-4 h-4" />
+            <span>My profile</span>
+          </button>
+          
+          <button
+            onClick={() => {
+              onLogout();
+              setShowUserMenu(false);
+              navigate("/");
+            }}
+            className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 transition-colors duration-200"
+          >
+            <FaSignOutAlt className="w-4 h-4" />
+            <span>Odjava</span>
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
         ) : (
           <div className="flex items-center justify-end space-x-4">
             <button

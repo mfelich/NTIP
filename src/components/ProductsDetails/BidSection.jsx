@@ -61,7 +61,7 @@ const BidSection = () => {
           <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 rounded-lg mb-3 border border-gray-200">
             <div className="col-span-4 flex items-center space-x-3">
               <FaDollarSign className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-semibold text-gray-700">Bid Amount</span>
+              <span className="text-sm font-semibold text-gray-700">Bid</span>
             </div>
             <div className="col-span-4 flex items-center space-x-3">
               <FaCalendarAlt className="w-4 h-4 text-gray-500" />

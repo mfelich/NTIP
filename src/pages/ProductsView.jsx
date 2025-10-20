@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaFilter, FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { FaSearch, FaFilter, FaArrowLeft, FaArrowRight, FaPlus } from "react-icons/fa";
 import SidebarFilter from "../components/ProductsView/SidebarFilter";
 import ProductCard from "../components/ProductsView/ProductCard";
+import { useNavigate } from "react-router-dom";
 
 const ProductsView = () => {
   const [products, setProducts] = useState([]);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -16,7 +18,6 @@ const ProductsView = () => {
     setError("");
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
       
       // Build query parameters
       const params = new URLSearchParams({
@@ -32,7 +33,6 @@ const ProductsView = () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -68,6 +68,10 @@ const ProductsView = () => {
     fetchProducts(0, "");
   };
 
+  const handleAddProduct = () => {
+    navigate("/add-product");
+  };
+
   // Generate page numbers for pagination
   const getPageNumbers = () => {
     const pages = [];
@@ -95,7 +99,7 @@ const ProductsView = () => {
   return (
     <>
       {/* Page */}
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8">
         <div className="w-full flex flex-col lg:flex-row items-start justify-between px-6 lg:px-28 gap-8">
           
           {/* Filter section (left side) - Desktop */}
@@ -127,10 +131,11 @@ const ProductsView = () => {
           <div className="w-full lg:w-9/12">
             <div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8">
               
-              {/* Search input */}
-              <div className="mb-8">
-                <form onSubmit={handleSearch} className="relative">
-                  <div className="relative w-full max-w-[400px] mx-auto">
+              {/* Search and Add Product Section */}
+              <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                {/* Search input */}
+                <form onSubmit={handleSearch} className="relative flex-1 max-w-[400px]">
+                  <div className="relative w-full">
                     {/* Search icon */}
                     <div className="absolute inset-y-0 start-0 flex items-center pl-4 pointer-events-none">
                       <FaSearch className="w-4 h-4 text-gray-500" />
@@ -145,7 +150,7 @@ const ProductsView = () => {
                       placeholder="Search products..."
                     />
 
-                    {/* Button */}
+                    {/* Search Button */}
                     <button
                       type="submit"
                       className="absolute right-1 top-1 bottom-1 text-purple-700 hover:text-white border border-purple-700 hover:bg-gradient-to-r hover:from-purple-600 hover:to-purple-700 focus:ring-2 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-sm px-6 transition-all duration-300"
@@ -154,19 +159,28 @@ const ProductsView = () => {
                     </button>
                   </div>
                 </form>
-                
-                {/* Clear search button */}
-                {searchQuery && (
-                  <div className="text-center mt-2">
-                    <button
-                      onClick={handleClearSearch}
-                      className="text-sm text-purple-600 hover:text-purple-700 font-medium"
-                    >
-                      Clear search
-                    </button>
-                  </div>
-                )}
+
+                {/* Add Product Button */}
+                <button
+                  onClick={handleAddProduct}
+                  className="flex items-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                >
+                  <FaPlus className="w-4 h-4" />
+                  <span>Add Product</span>
+                </button>
               </div>
+
+              {/* Clear search button */}
+              {searchQuery && (
+                <div className="text-center -mt-4 mb-4">
+                  <button
+                    onClick={handleClearSearch}
+                    className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                  >
+                    Clear search
+                  </button>
+                </div>
+              )}
 
               {/* Loading state */}
               {loading && (
