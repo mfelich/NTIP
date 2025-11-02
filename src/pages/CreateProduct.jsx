@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { FaPlus, FaCalendar, FaTag, FaDollarSign, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaCalendar, FaTag, FaDollarSign, FaCheck, FaTimes, FaAlignLeft } from 'react-icons/fa';
 
 const CreateProduct = () => {
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     startingPrice: '',
     startTime: '',
     endTime: ''
@@ -20,15 +21,13 @@ const CreateProduct = () => {
     }));
   };
 
-  // Konvertuj datetime-local value u LocalDateTime format za backend
+  // Convert datetime-local value to LocalDateTime format for backend
   const formatDateTimeForBackend = (dateTimeString) => {
     if (!dateTimeString) return '';
     
-    // datetime-local vraća format: "YYYY-MM-DDTHH:mm"
-    // Konvertujemo u format koji backend očekuje: "YYYY-MM-DDTHH:mm:ss"
     const date = new Date(dateTimeString);
     
-    // Formatiraj kao LocalDateTime bez timezone (bez Z na kraju)
+    // Format as LocalDateTime without timezone (without Z at the end)
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -47,22 +46,23 @@ const CreateProduct = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Niste prijavljeni');
+        throw new Error('You are not logged in');
       }
 
-      // Validiraj da je endTime nakon startTime
+      // Validate that endTime is after startTime
       if (new Date(formData.endTime) <= new Date(formData.startTime)) {
-        throw new Error('Vrijeme završetka mora biti nakon vremena početka');
+        throw new Error('End time must be after start time');
       }
 
       const productData = {
         name: formData.name,
+        description: formData.description,
         startingPrice: Number(formData.startingPrice),
         startTime: formatDateTimeForBackend(formData.startTime),
         endTime: formatDateTimeForBackend(formData.endTime)
       };
 
-      console.log('Sending data:', productData); // Za debug
+      console.log('Sending data:', productData); // For debug
 
       const response = await fetch('http://localhost:8080/api/products', {
         method: 'POST',
@@ -75,12 +75,13 @@ const CreateProduct = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || 'Greška pri dodavanju proizvoda');
+        throw new Error(errorText || 'Error adding product');
       }
 
       // Reset form and show success message
       setFormData({
         name: '',
+        description: '',
         startingPrice: '',
         startTime: '',
         endTime: ''
@@ -128,16 +129,16 @@ const CreateProduct = () => {
               <FaCheck className="w-8 h-8 text-green-600" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900 text-center mb-2">
-              Uspješno!
+              Success!
             </h3>
             <p className="text-gray-600 text-center mb-6">
-              Proizvod je uspješno dodan.
+              Product has been successfully added.
             </p>
             <button
               onClick={closeSuccessMessage}
               className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300"
             >
-              U redu
+              OK
             </button>
           </div>
         </div>
@@ -147,10 +148,10 @@ const CreateProduct = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Dodaj Novi Proizvod
+            Add New Product
           </h1>
           <p className="text-lg text-gray-600 max-w-md mx-auto">
-            Popunite podatke ispod kako biste dodali novi proizvod na aukciju
+            Fill in the information below to add a new product to the auction
           </p>
         </div>
 
@@ -179,7 +180,7 @@ const CreateProduct = () => {
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-3">
                 <FaTag className="w-4 h-4 mr-2 text-purple-500" />
-                Naziv proizvoda
+                Product Name
               </label>
               <input
                 type="text"
@@ -188,7 +189,24 @@ const CreateProduct = () => {
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 bg-gray-50 focus:bg-white"
-                placeholder="Unesite naziv proizvoda"
+                placeholder="Enter product name"
+              />
+            </div>
+
+            {/* Product Description */}
+            <div>
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-3">
+                <FaAlignLeft className="w-4 h-4 mr-2 text-blue-500" />
+                Product Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                required
+                rows="4"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 bg-gray-50 focus:bg-white resize-none"
+                placeholder="Enter detailed product description..."
               />
             </div>
 
@@ -196,7 +214,7 @@ const CreateProduct = () => {
             <div>
               <label className="flex items-center text-sm font-medium text-gray-700 mb-3">
                 <FaDollarSign className="w-4 h-4 mr-2 text-green-500" />
-                Početna cijena ($)
+                Starting Price ($)
               </label>
               <input
                 type="number"
@@ -217,7 +235,7 @@ const CreateProduct = () => {
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-3">
                   <FaCalendar className="w-4 h-4 mr-2 text-blue-500" />
-                  Vrijeme početka
+                  Start Time
                 </label>
                 <input
                   type="datetime-local"
@@ -234,7 +252,7 @@ const CreateProduct = () => {
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-3">
                   <FaCalendar className="w-4 h-4 mr-2 text-orange-500" />
-                  Vrijeme završetka
+                  End Time
                 </label>
                 <input
                   type="datetime-local"
@@ -258,12 +276,12 @@ const CreateProduct = () => {
                 {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Dodavanje...</span>
+                    <span>Adding...</span>
                   </>
                 ) : (
                   <>
                     <FaPlus className="w-5 h-5" />
-                    <span>Dodaj Proizvod</span>
+                    <span>Add Product</span>
                   </>
                 )}
               </button>
@@ -278,12 +296,12 @@ const CreateProduct = () => {
               <span className="text-white text-sm font-bold">i</span>
             </div>
             <div>
-              <h4 className="font-semibold text-blue-900 mb-2">Savjeti za dodavanje proizvoda:</h4>
+              <h4 className="font-semibold text-blue-900 mb-2">Tips for adding products:</h4>
               <ul className="text-blue-800 text-sm space-y-1">
-                <li>• Odaberite realnu početnu cijenu</li>
-                <li>• Vrijeme završetka mora biti nakon vremena početka</li>
-                <li>• Budite precizni u opisu proizvoda</li>
-                <li>• Format datuma: YYYY-MM-DDTHH:mm:ss (bez timezone)</li>
+                <li>• Choose a realistic starting price</li>
+                <li>• End time must be after start time</li>
+                <li>• Be precise in product description</li>
+                <li>• Provide clear and detailed product information</li>
               </ul>
             </div>
           </div>

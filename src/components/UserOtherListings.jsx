@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { FaBox, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import ProductSmallCard from "./ProductSmallCard";
+import { useNavigate } from "react-router-dom";
 
 const UserOtherListings = ({ userId }) => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [error, setError] = useState("");
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -41,14 +43,15 @@ const UserOtherListings = ({ userId }) => {
   }, [userId]);
 
   const scroll = (direction) => {
-    const container = document.getElementById('products-scroll');
+    const container = document.getElementById("products-scroll");
     const scrollAmount = 300;
-    const newPosition = direction === 'left' 
-      ? scrollPosition - scrollAmount 
-      : scrollPosition + scrollAmount;
-    
+    const newPosition =
+      direction === "left"
+        ? scrollPosition - scrollAmount
+        : scrollPosition + scrollAmount;
+
     setScrollPosition(newPosition);
-    container.scrollTo({ left: newPosition, behavior: 'smooth' });
+    container.scrollTo({ left: newPosition, behavior: "smooth" });
   };
 
   return (
@@ -63,18 +66,18 @@ const UserOtherListings = ({ userId }) => {
             Other Listings
           </h2>
         </div>
-        
+
         {/* Navigation Arrows */}
         {products.length > 0 && (
           <div className="flex space-x-2">
-            <button 
-              onClick={() => scroll('left')}
+            <button
+              onClick={() => scroll("left")}
               className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
             >
               <FaChevronLeft className="w-4 h-4" />
             </button>
-            <button 
-              onClick={() => scroll('right')}
+            <button
+              onClick={() => scroll("right")}
               className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
             >
               <FaChevronRight className="w-4 h-4" />
@@ -85,10 +88,10 @@ const UserOtherListings = ({ userId }) => {
 
       {/* Products Scroll */}
       <div className="relative">
-        <div 
+        <div
           id="products-scroll"
           className="flex space-x-2 overflow-x-auto scrollbar-hide pb-4"
-          style={{ scrollBehavior: 'smooth' }}
+          style={{ scrollBehavior: "smooth" }}
         >
           {products.length > 0 ? (
             products.map((product) => (

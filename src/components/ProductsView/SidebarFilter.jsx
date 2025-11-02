@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
-import { FaFilter, FaDollarSign, FaSortAmountDown, FaTags } from 'react-icons/fa';
+import { FaFilter, FaSortAmountDown, FaTags } from 'react-icons/fa';
 
-const SidebarFilter = () => {
+const SidebarFilter = ({ onFiltersApply }) => {
   const [filters, setFilters] = useState({
     productType: 'all',
-    sortBy: 'current-biddable',
-    priceRange: {
-      min: '',
-      max: ''
-    }
+    sortBy: ''
   });
 
   const handleFilterChange = (filterType, value) => {
@@ -18,45 +14,34 @@ const SidebarFilter = () => {
     }));
   };
 
-  const handlePriceChange = (type, value) => {
-    setFilters(prev => ({
-      ...prev,
-      priceRange: {
-        ...prev.priceRange,
-        [type]: value
-      }
-    }));
-  };
-
   const handleApplyFilters = () => {
-    console.log('Applied filters:', filters);
-    // Here you would typically pass filters to parent component or API
+    // Pozovi callback funkciju sa trenutnim filterima
+    if (onFiltersApply) {
+      onFiltersApply(filters);
+    }
   };
 
   const handleResetFilters = () => {
-    setFilters({
+    const resetFilters = {
       productType: 'all',
-      sortBy: 'current-biddable',
-      priceRange: {
-        min: '',
-        max: ''
-      }
-    });
+      sortBy: ''
+    };
+    setFilters(resetFilters);
+    
+    // Također pošalji resetovane filtere parentu
+    if (onFiltersApply) {
+      onFiltersApply(resetFilters);
+    }
   };
 
   const productOptions = [
     { value: 'all', label: 'All Products' },
-    { value: 'homes', label: 'Real Estate' },
-    { value: 'cars', label: 'Vehicles' },
-    { value: 'electronics', label: 'Electronics' },
-    { value: 'collectibles', label: 'Collectibles' }
+    { value: 'current-biddable', label: 'Currently Biddable' },
+    { value: 'scheduled', label: 'Scheduled' },
+    { value: 'closed', label: 'Closed' },
   ];
 
   const sortOptions = [
-    { value: 'current-biddable', label: 'Currently Biddable' },
-    { value: 'future-bids', label: 'Future Auctions' },
-    { value: 'ending-soon', label: 'Ending Soon' },
-    { value: 'newest', label: 'Newest First' },
     { value: 'price-low', label: 'Price: Low to High' },
     { value: 'price-high', label: 'Price: High to Low' }
   ];
@@ -137,75 +122,6 @@ const SidebarFilter = () => {
             ))}
           </div>
         </div>
-
-        {/* Price Range Filter */}
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <FaDollarSign className="w-4 h-4 text-purple-600" />
-            <h3 className="text-lg font-semibold text-gray-800">Price Range</h3>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">
-                  Minimum Price
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 text-sm">$</span>
-                  </div>
-                  <input
-                    type="number"
-                    value={filters.priceRange.min}
-                    onChange={(e) => handlePriceChange('min', e.target.value)}
-                    className="block w-full pl-8 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white"
-                    placeholder="0"
-                    min="0"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">
-                  Maximum Price
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 text-sm">$</span>
-                  </div>
-                  <input
-                    type="number"
-                    value={filters.priceRange.max}
-                    onChange={(e) => handlePriceChange('max', e.target.value)}
-                    className="block w-full pl-8 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white"
-                    placeholder="10000"
-                    min="0"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            {/* Price range visual indicator */}
-            <div className="pt-2">
-              <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>${filters.priceRange.min || '0'}</span>
-                <span>${filters.priceRange.max || 'No limit'}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: filters.priceRange.max ? 
-                      `calc(${(Math.min(parseInt(filters.priceRange.max) || 0, 10000) / 10000) * 100}%)` : '100%' 
-                  }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
       </div>
 
       {/* Action Buttons */}

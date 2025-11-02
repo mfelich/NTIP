@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaFilter, FaArrowLeft, FaArrowRight, FaUsers, FaExclamationTriangle } from "react-icons/fa";
-import SidebarFilter from "../components/ProductsView/SidebarFilter";
+import { FaSearch, FaArrowLeft, FaArrowRight, FaUsers, FaExclamationTriangle } from "react-icons/fa";
 import UserPreviewCard from "../components/UserPreviewCard";
 
 const UsersView = () => {
@@ -8,7 +7,6 @@ const UsersView = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
@@ -16,8 +14,6 @@ const UsersView = () => {
     setError('');
     setLoading(true);
     try {
-
-      // Build query parameters
       const params = new URLSearchParams({
         page: page.toString(),
         size: '12'
@@ -39,6 +35,7 @@ const UsersView = () => {
       }
 
       const data = await response.json();
+      console.log(data);
       setUsers(data.content);
       setTotalPages(data.totalPages);
       setCurrentPage(data.number);
@@ -93,41 +90,22 @@ const UsersView = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 py-8">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          
-          {/* Filter Section - Desktop */}
-          <div className="hidden lg:block w-full lg:w-3/12">
-            <div className="sticky top-8">
-              <SidebarFilter />
-            </div>
-          </div>
-
-          {/* Mobile Filter Toggle */}
-          <div className="lg:hidden w-full">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-4 rounded-xl font-semibold hover:from-purple-600 hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3"
-            >
-              <FaFilter className="w-5 h-5" />
-              <span>{showFilters ? "Hide Filters" : "Show Filters"}</span>
-            </button>
-          </div>
-
-          {/* Mobile Filter Panel */}
-          {showFilters && (
-            <div className="lg:hidden w-full bg-white rounded-2xl shadow-xl p-6">
-              <SidebarFilter />
-            </div>
-          )}
-
-          {/* Main Content */}
-          <div className="w-full lg:w-9/12">
+          {/* Main Content - Now taking full width */}
+          <div className="w-full">
             <div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8">
               
+              {/* Header Section */}
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin manager - USERS</h1>
+                <p className="text-gray-600 max-w-2xl mx-auto">
+                  Manage user profiles
+                </p>
+              </div>
 
               {/* Search Bar */}
               <div className="mb-8">
                 <form onSubmit={handleSearch} className="relative">
-                  <div className="relative w-full max-w-md mx-auto">
+                  <div className="relative w-full max-w-2xl mx-auto">
                     <div className="absolute inset-y-0 start-0 flex items-center pl-4 pointer-events-none">
                       <FaSearch className="w-4 h-4 text-gray-500" />
                     </div>
@@ -135,12 +113,12 @@ const UsersView = () => {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="block w-full p-2 pl-11 text-gray-900 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-all duration-300"
+                      className="block w-full p-3 pl-11 text-gray-900 border border-gray-300 rounded-xl bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:bg-white transition-all duration-300"
                       placeholder="Search users by name or email..."
                     />
                     <button
                       type="submit"
-                      className="absolute right-2 top-2 bottom-2 text-purple-700 hover:text-white border border-purple-700 hover:bg-gradient-to-r hover:from-purple-600 hover:to-purple-700 focus:ring-2 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-sm px-4 transition-all duration-300"
+                      className="absolute right-2 top-2 bottom-2 text-purple-700 hover:text-white border border-purple-700 hover:bg-gradient-to-r hover:from-purple-600 hover:to-purple-700 focus:ring-2 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-sm px-6 transition-all duration-300"
                     >
                       Search
                     </button>
@@ -157,6 +135,22 @@ const UsersView = () => {
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* Stats Bar */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="bg-purple-50 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-purple-600">{users.length}</div>
+                  <div className="text-sm text-purple-500">Users Displayed</div>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-600">{totalPages}</div>
+                  <div className="text-sm text-blue-500">Total Pages</div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-green-600">{currentPage + 1}</div>
+                  <div className="text-sm text-green-500">Current Page</div>
+                </div>
               </div>
 
               {/* Loading State */}
@@ -185,7 +179,7 @@ const UsersView = () => {
               {/* Users Grid */}
               {!loading && !error && (
                 <>
-                  <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 mb-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                     {users.length > 0 ? (
                       users.map((user) => (
                         <UserPreviewCard

@@ -1,42 +1,160 @@
-import React, { useState } from "react";
-import { FaGavel, FaHistory, FaUser, FaDollarSign, FaPaperPlane, FaTrophy, FaCalendarAlt } from "react-icons/fa";
+import React, { useEffect, useState, useRef } from "react";
+import {
+  FaGavel,
+  FaHistory,
+  FaUser,
+  FaDollarSign,
+  FaPaperPlane,
+  FaTrophy,
+  FaCalendarAlt,
+} from "react-icons/fa";
 
-const BidSection = () => {
+const BidSection = ({ productId, productStatus }) => {
+  const socketRef = useRef(null);
+  const [bids, setBids] = useState([]);
+  const [error, setError] = useState("");
   const [bidAmount, setBidAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [totalBids, setTotalBids] = useState(0);
 
-  const bids = [
-    { id: 1, amount: 550, date: "24.10.2025", user: "mfelich", isWinning: true },
-    { id: 2, amount: 490, date: "24.10.2025", user: "unaMaki", isWinning: false },
-    { id: 3, amount: 430, date: "24.10.2025", user: "takiTaki", isWinning: false },
-  ];
+  const fetchBids = async () => {
+    setError("");
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!productId) {
+        setError("Product ID not found.");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:8080/api/bid/product/${productId}?page=0&size=3`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Error while fetching bids");
+      }
+
+      const data = await response.json();
+
+      // Backend vraća Page<Bid> → uzmi content (lista bidova) i totalElements
+      setBids(data.content || []);
+      setTotalBids(data.totalElements || 0);
+
+      console.log("Fetched bids:", data);
+    } catch (err) {
+      console.error("Error:", err);
+      setError(err.message);
+    }
+  };
+
+  useEffect(() => {
+    if (productId) {
+      fetchBids();
+    }
+  }, [productId]);
+
+  useEffect(() => {
+    return () => {
+      if (socketRef.current) {
+        console.log("🧹 Closing WebSocket connection on unmount");
+        socketRef.current.close();
+        socketRef.current = null;
+      }
+    };
+  }, []);
 
   const handlePlaceBid = async (e) => {
     e.preventDefault();
     if (!bidAmount) return;
 
     setIsSubmitting(true);
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log("Placing bid:", bidAmount);
-      setBidAmount("");
-      // Add success toast here
+      const token = localStorage.getItem("token");
+
+      const response = await fetch("http://localhost:8080/api/bid", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          productId: productId,
+          amount: bidAmount,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Greška prilikom slanja bida: ${response.status}`);
+      }
+
+      console.log(`✅ Uspješno bidovano na proizvod: ${productId}`);
+
+      setBidAmount(""); // reset input polja
     } catch (error) {
-      console.error("Error placing bid:", error);
-      // Add error toast here
+      console.error("❌ Greška prilikom slanja bida:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleWebSocketConnection = () => {
+    if (socketRef.current) return;
+
+    const ws = new WebSocket("ws://localhost:8080/ws");
+
+    ws.onopen = () => {
+      console.log("✅ Connected to WebSocket");
+      // Pošalji productId backendu (registracija sesije)
+      ws.send(JSON.stringify({ productId }));
+    };
+
+    ws.onmessage = (event) => {
+      if (!event.data) return;
+
+      try {
+        const newBid = JSON.parse(event.data);
+        console.log("💬 Received new bid:", newBid);
+
+        setBids((prevBids) => {
+          const updated = [newBid, ...prevBids];
+          return updated.sort((a, b) => b.amount - a.amount);
+        });
+      } catch (error) {
+        console.error("❌ Greška parsiranja WS poruke:", event.data, error);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log("❌ Disconnected from WebSocket");
+    };
+
+    socketRef.current = ws;
+  };
+
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 0,
     }).format(amount);
   };
+
+  if (error) {
+    return (
+      <div className="text-center text-red-500 py-6">
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -50,7 +168,9 @@ const BidSection = () => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Bidding History</h2>
-              <p className="text-white/80 text-sm">{bids.length} active bids</p>
+              <p className="text-white/80 text-sm">
+                {totalBids} total bids ({bids.length} shown)
+              </p>
             </div>
           </div>
         </div>
@@ -73,35 +193,41 @@ const BidSection = () => {
             </div>
           </div>
 
+          {/* Bids */}
           <div className="space-y-3">
-            {bids.map((bid, index) => (
+            {bids.slice(0, 3).map((bid, index) => (
               <div
                 key={bid.id}
                 className={`grid grid-cols-12 gap-4 items-center p-4 rounded-xl border transition-all duration-200 ${
-                  bid.isWinning
-                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-sm'
-                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                } ${index === 0 ? 'ring-2 ring-green-200' : ''}`}
+                  index === 0
+                    ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 ring-2 ring-green-200 shadow-sm"
+                    : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                }`}
               >
                 {/* Bid Amount Column */}
                 <div className="col-span-4">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      bid.isWinning
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md'
-                        : 'bg-white text-gray-600 border border-gray-300'
-                    }`}>
-                      <FaDollarSign className={`w-5 h-5 ${bid.isWinning ? 'text-white' : 'text-gray-500'}`} />
+                    <div
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        index === 0
+                          ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
+                          : "bg-white text-gray-600 border border-gray-300"
+                      }`}
+                    >
+                      <FaDollarSign
+                        className={`w-5 h-5 ${
+                          index === 0 ? "text-white" : "text-gray-500"
+                        }`}
+                      />
                     </div>
                     <div className="flex flex-col">
-                      <span className={`text-lg font-bold ${bid.isWinning ? 'text-green-700' : 'text-gray-700'}`}>
+                      <span
+                        className={`text-lg font-bold ${
+                          index === 0 ? "text-green-700" : "text-gray-700"
+                        }`}
+                      >
                         {formatCurrency(bid.amount)}
                       </span>
-                      {bid.isWinning && (
-                        <span className="flex items-center text-green-600 text-xs font-medium mt-1">
-
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -110,7 +236,9 @@ const BidSection = () => {
                 <div className="col-span-4">
                   <div className="flex items-center text-gray-600">
                     <FaCalendarAlt className="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" />
-                    <span className="text-sm font-medium">{bid.date}</span>
+                    <span className="text-sm font-medium">
+                      {new Date(bid.date).toLocaleString()}
+                    </span>
                   </div>
                 </div>
 
@@ -118,20 +246,27 @@ const BidSection = () => {
                 <div className="col-span-3">
                   <div className="flex items-center text-gray-600">
                     <FaUser className="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" />
-                    <span className="text-sm font-medium">{bid.user}</span>
+                    <span className="text-sm font-medium">
+                      {bid?.bidderUsername || "Unknown"}
+                    </span>
                   </div>
                 </div>
-
-
               </div>
             ))}
           </div>
 
-          {/* No Bids State */}
-          {bids.length === 0 && (
+          {/* No Bids State, status == OPEN*/}
+          {bids.length === 0 && productStatus == "OPEN" && (
             <div className="text-center py-8">
               <FaGavel className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500">No bids yet. Be the first to bid!</p>
+            </div>
+          )}
+
+          {bids.length === 0 && productStatus == "CLOSED" && (
+            <div className="text-center py-8">
+              <FaGavel className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">This auction is closed!</p>
             </div>
           )}
         </div>
@@ -148,6 +283,7 @@ const BidSection = () => {
                 type="number"
                 value={bidAmount}
                 onChange={(e) => setBidAmount(e.target.value)}
+                onClick={handleWebSocketConnection}
                 className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
                 placeholder="Enter your bid amount"
                 min={bids[0]?.amount + 1 || 1}
@@ -180,17 +316,23 @@ const BidSection = () => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
                 <FaTrophy className="w-3 h-3 text-green-500 mr-1" />
-                <span>Current bid: <strong>{formatCurrency(bids[0]?.amount || 0)}</strong></span>
+                <span>
+                  Current bid:{" "}
+                  <strong>{formatCurrency(bids[0]?.amount || 0)}</strong>
+                </span>
               </div>
               <div className="flex items-center">
                 <FaGavel className="w-3 h-3 text-purple-500 mr-1" />
-                <span>Minimum bid: <strong>{formatCurrency((bids[0]?.amount || 0) + 1)}</strong></span>
+                <span>
+                  Minimum bid:{" "}
+                  <strong>{formatCurrency((bids[0]?.amount || 0) + 1)}</strong>
+                </span>
               </div>
             </div>
-            
+
             <div className="flex items-center text-gray-500">
               <FaHistory className="w-3 h-3 mr-1" />
-              <span>{bids.length} bids</span>
+              <span>{totalBids} bids total</span>
             </div>
           </div>
         </form>

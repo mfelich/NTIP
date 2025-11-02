@@ -1,23 +1,31 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaCheckCircle, FaTimes } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  FaUser,
+  FaEnvelope,
+  FaLock,
+  FaEye,
+  FaEyeSlash,
+  FaCheckCircle,
+  FaTimes,
+} from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const RegisterForm = ({ setShowRegister }) => {
   const navigate = useNavigate();
   const modalRef = useRef();
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
 
   // Handle click outside to close modal
   useEffect(() => {
@@ -25,47 +33,60 @@ const RegisterForm = ({ setShowRegister }) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         if (success) {
           // If success, navigate to login
-          navigate('/login');
+          navigate("/login");
         } else {
-          // If not success, just close the register form
           setShowRegister(false);
         }
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [setShowRegister, success, navigate]);
+
+  const handleCloseModalClick = () => {
+    navigate("/");
+  };
+
+  const handleLoginFormClick = () => {
+    navigate("/login");
+  };
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
-    setError('');
+    setError("");
   };
 
   const validateForm = () => {
-    if (!formData.firstName || !formData.lastName || !formData.username || !formData.email || !formData.password) {
-      setError('All fields are required');
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.username ||
+      !formData.email ||
+      !formData.password
+    ) {
+      setError("All fields are required");
       return false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return false;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError("Password must be at least 6 characters long");
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
+      setError("Please enter a valid email address");
       return false;
     }
 
@@ -74,41 +95,40 @@ const RegisterForm = ({ setShowRegister }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8080/api/auth/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           username: formData.username,
           firstName: formData.firstName,
           lastName: formData.lastName,
           password: formData.password,
-          email: formData.email
+          email: formData.email,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
+        throw new Error(data.message || "Registration failed");
       }
 
       setSuccess(true);
-      // Auto navigate to login after 2 seconds
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
 
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -117,17 +137,23 @@ const RegisterForm = ({ setShowRegister }) => {
   if (success) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div 
+        <div
           ref={modalRef}
           className="bg-white rounded-2xl p-8 max-w-md w-full text-center animate-in fade-in duration-300"
         >
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <FaCheckCircle className="w-8 h-8 text-green-500" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Registration Successful!</h2>
-          <p className="text-gray-600 mb-4">Your account has been created successfully.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Registration Successful!
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Your account has been created successfully.
+          </p>
           <div className="w-12 h-1 bg-gradient-to-r from-green-400 to-blue-400 rounded-full mx-auto"></div>
-          <p className="text-gray-400 text-xs mt-4">Click anywhere outside to go to login immediately</p>
+          <p className="text-gray-400 text-xs mt-4">
+            Click anywhere outside to go to login immediately
+          </p>
         </div>
       </div>
     );
@@ -135,7 +161,7 @@ const RegisterForm = ({ setShowRegister }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div 
+      <div
         ref={modalRef}
         className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in duration-300"
       >
@@ -152,7 +178,10 @@ const RegisterForm = ({ setShowRegister }) => {
               </div>
             </div>
             <button
-              onClick={() => setShowRegister(false)}
+              onClick={() => {
+                handleCloseModalClick();
+                setShowRegister(false);
+              }}
               className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-all duration-200"
             >
               <FaTimes className="w-4 h-4 text-white" />
@@ -323,17 +352,20 @@ const RegisterForm = ({ setShowRegister }) => {
                 <span>Creating Account...</span>
               </div>
             ) : (
-              'Create Account'
+              "Create Account"
             )}
           </button>
 
           {/* Footer */}
           <div className="text-center pt-4 border-t border-gray-200">
             <p className="text-gray-600 text-sm">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <button
                 type="button"
-                onClick={() => setShowRegister(false)}
+                onClick={() => {
+                  handleLoginFormClick();
+                  setShowRegister(false);
+                }}
                 className="text-purple-600 hover:text-purple-700 font-medium"
               >
                 Sign in

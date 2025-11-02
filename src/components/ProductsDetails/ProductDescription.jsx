@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaAlignLeft, FaInfoCircle } from 'react-icons/fa';
 
-const ProductDescription = ({ description = "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Iusto velit omnis quaerat ad nam, doloremque perspiciatis eum doloribus dolor perferendis autem veniam amet atque. Repudiandae eius ea dolores modi soluta." }) => {
+const ProductDescription = ({ description }) => {
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
       <div className="flex items-center mb-4">
@@ -11,7 +11,7 @@ const ProductDescription = ({ description = "Lorem ipsum, dolor sit amet consect
         <h2 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent">
           Description
         </h2>
-      </div>
+      </div> 
 
       <div className="flex items-start">
         <FaInfoCircle className="w-4 h-4 text-green-500 mt-1 mr-3 flex-shrink-0" />

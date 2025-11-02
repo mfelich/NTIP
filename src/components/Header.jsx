@@ -1,9 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaHeart,FaChevronDown,FaSignOutAlt, FaBox, FaUsers, FaInfoCircle, FaUser } from "react-icons/fa";
+import {
+  FaHeart,
+  FaChevronDown,
+  FaSignOutAlt,
+  FaBox,
+  FaUsers,
+  FaInfoCircle,
+  FaUser,
+} from "react-icons/fa";
+import { RiAdminFill } from "react-icons/ri";
 import FavoriteItem from "./FavoriteItem";
 
-const Header = ({ username, onLogout }) => {
+const Header = ({ userId, username, role, onLogout }) => {
+  const [favoritesCount, setFavoritesCount] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showFavorites, setShowFavorites] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
@@ -14,6 +26,48 @@ const Header = ({ username, onLogout }) => {
   const handleUsersClick = () => navigate("/user-view");
   const handleAboutClick = () => navigate("/about-us");
   const handleHomeClick = () => navigate("/");
+
+  const fetchFavoritesCount = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `http://localhost:8080/api/favorites/count/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const count = await response.json();
+      setFavoritesCount(count);
+    } catch (err) {
+      setError(err.message);
+      console.error("Greška pri dobijanju broja omiljenih:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchFavoritesCount();
+    }
+  }, [userId]);
+
+  // Ova funkcija će se proslijediti FavoriteItem komponenti
+  const refreshFavoritesCount = () => {
+    fetchFavoritesCount();
+  };
 
   return (
     <>
@@ -38,7 +92,7 @@ const Header = ({ username, onLogout }) => {
               <FaBox className="text-sm group-hover:scale-110 transition-transform" />
               <span className="text-sm font-medium">Products</span>
             </button>
-            
+
             <button
               onClick={handleUsersClick}
               className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors duration-200 group"
@@ -46,7 +100,7 @@ const Header = ({ username, onLogout }) => {
               <FaUsers className="text-sm group-hover:scale-110 transition-transform" />
               <span className="text-sm font-medium">Users</span>
             </button>
-            
+
             <button
               onClick={handleAboutClick}
               className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors duration-200 group"
@@ -55,80 +109,104 @@ const Header = ({ username, onLogout }) => {
               <span className="text-sm font-medium">About Us</span>
             </button>
           </nav>
-
-        
         </div>
 
         {/* User Actions */}
         {username ? (
           <div className="flex items-center justify-end space-x-4">
-  {/* Favorites */}
-  <div className="relative">
-    <button
-      onClick={() => setShowFavorites(!showFavorites)}
-      className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200 relative group"
-    >
-      <FaHeart className="w-5 h-5" />
-      <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-        2
-      </div>
-    </button>
+            {/* Favorites */}
+            <div className="relative">
+              <button
+                onClick={() => setShowFavorites(!showFavorites)}
+                className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200 relative group"
+              >
+                <FaHeart className="w-5 h-5" />
+                {favoritesCount > 0 && (
+                  <>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {favoritesCount}
+                    </div>
+                  </>
+                )}
+              </button>
 
-    {/* Favorites Popup */}
-    {showFavorites && (
-      <div className="absolute right-0 mt-2 z-50">
-        <FavoriteItem 
-          user={username}
-          setShowFavorites={setShowFavorites}
-        />
-      </div>
-    )}
-  </div>
+              {/* Favorites Popup */}
+              {showFavorites && (
+                <div className="absolute right-0 mt-2 z-50">
+                  <FavoriteItem
+                    user={username}
+                    setShowFavorites={setShowFavorites}
+                    onFavoriteUpdate={refreshFavoritesCount} // Dodaj ovu liniju
+                  />
+                </div>
+              )}
+            </div>
 
-  {/* User Profile */}
-  <div className="flex items-center space-x-3">
-    <div className="relative">
-      <button
-        onClick={() => setShowUserMenu(!showUserMenu)}
-        className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors duration-200"
-      >
-        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-          <FaUser className="w-4 h-4 text-white" />
-        </div>
-        <span className="text-sm font-medium hidden sm:block">{username}</span>
-        <FaChevronDown className={`w-3 h-3 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
-      </button>
+            {/* User Profile */}
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors duration-200"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <FaUser className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-medium hidden sm:block">
+                    {username}
+                  </span>
+                  <FaChevronDown
+                    className={`w-3 h-3 transition-transform duration-200 ${
+                      showUserMenu ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
 
-      {/* User Menu Popup */}
-      {showUserMenu && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-          <button
-            onClick={() => {
-              navigate("/my-profile");
-              setShowUserMenu(false);
-            }}
-            className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors duration-200"
-          >
-            <FaUser className="w-4 h-4" />
-            <span>My profile</span>
-          </button>
-          
-          <button
-            onClick={() => {
-              onLogout();
-              setShowUserMenu(false);
-              navigate("/");
-            }}
-            className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 transition-colors duration-200"
-          >
-            <FaSignOutAlt className="w-4 h-4" />
-            <span>Odjava</span>
-          </button>
-        </div>
-      )}
-    </div>
-  </div>
-</div>
+                {/* User Menu Popup */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <button
+                      onClick={() => {
+                        navigate("/my-profile");
+                        setShowUserMenu(false);
+                      }}
+                      className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors duration-200"
+                    >
+                      <FaUser className="w-4 h-4" />
+                      <span>My profile</span>
+                    </button>
+
+                    {role === "ADMIN" && (
+                      <>
+                        <button
+                          onClick={() => {
+                            navigate("/admin-panel");
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors duration-200"
+                        >
+                          <RiAdminFill className="w-4 h-4" />
+                          <span>Admin panel</span>
+                        </button>
+                      </>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        onLogout();
+                        setShowUserMenu(false);
+                        navigate("/");
+                      }}
+                      className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 transition-colors duration-200"
+                    >
+                      <FaSignOutAlt className="w-4 h-4" />
+                      <span>Odjava</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="flex items-center justify-end space-x-4">
             <button
@@ -137,7 +215,7 @@ const Header = ({ username, onLogout }) => {
             >
               Create Account
             </button>
-            
+
             <button
               onClick={handleLoginClick}
               className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium py-2 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
@@ -157,7 +235,7 @@ const Header = ({ username, onLogout }) => {
           <FaBox className="w-5 h-5" />
           <span className="text-xs mt-1">Home</span>
         </button>
-        
+
         <button
           onClick={handleProductsClick}
           className="flex flex-col items-center text-gray-600 hover:text-purple-600 transition-colors"
@@ -165,9 +243,7 @@ const Header = ({ username, onLogout }) => {
           <FaBox className="w-5 h-5" />
           <span className="text-xs mt-1">Products</span>
         </button>
-        
 
-        
         {username ? (
           <button
             onClick={() => setShowFavorites(!showFavorites)}
@@ -189,6 +265,5 @@ const Header = ({ username, onLogout }) => {
     </>
   );
 };
-
 
 export default Header;

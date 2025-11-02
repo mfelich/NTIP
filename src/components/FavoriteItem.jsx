@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaTimes, FaHeart, FaTrash, FaShoppingBag, FaUser, FaExclamationTriangle } from "react-icons/fa";
 
-const FavoriteItem = ({ setShowFavorites }) => {
+const FavoriteItem = ({ setShowFavorites, onFavoriteUpdate }) => {
   const [favorites, setFavorites] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,9 +48,12 @@ const FavoriteItem = ({ setShowFavorites }) => {
       if (!response.ok) {
         throw new Error("Error while removing from favorites");
       }
-
-      // Remove from local state
+      
       setFavorites(prev => prev.filter(fav => fav.product.id !== productId));
+      
+      if (onFavoriteUpdate) {
+        onFavoriteUpdate();
+      }
     } catch (err) {
       setError(err.message);
     } finally {

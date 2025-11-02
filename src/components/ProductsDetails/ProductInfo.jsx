@@ -115,19 +115,6 @@ const ProductInfo = ({ bidStatus, startingPrice, closesIn }) => {
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="mt-6">
-        <div className="flex justify-between text-sm text-gray-600 mb-2">
-          <span>Auction Progress</span>
-          <span>75%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-1000 ease-out"
-            style={{ width: '75%' }}
-          ></div>
-        </div>
-      </div>
 
     </div>
   );

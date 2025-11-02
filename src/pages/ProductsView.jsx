@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaFilter, FaArrowLeft, FaArrowRight, FaPlus } from "react-icons/fa";
+import {
+  FaSearch,
+  FaFilter,
+  FaArrowLeft,
+  FaArrowRight,
+  FaPlus,
+} from "react-icons/fa";
 import SidebarFilter from "../components/ProductsView/SidebarFilter";
 import ProductCard from "../components/ProductsView/ProductCard";
 import { useNavigate } from "react-router-dom";
 
-const ProductsView = () => {
+const ProductsView = ({ isAuthenticated }) => {
   const [products, setProducts] = useState([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -13,59 +19,94 @@ const ProductsView = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({
+    productType: 'all',
+    sortBy: ''
+  });
 
-  const fetchProducts = async (page = 0, search = "") => {
-    setError("");
-    setLoading(true);
-    try {
+  const handleFiltersChange = (filters) => {
+    setActiveFilters(filters);
+    setCurrentPage(0); // Reset to first page when filters change
+    // Automatski pozovi fetchProducts sa novim filterima
+    fetchProducts(0, searchQuery, filters);
+     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+const fetchProducts = async (page = 0, search = "", filters = activeFilters) => {
+  setError("");
+  setLoading(true);
+  try {
+    // Build query parameters
+    const params = new URLSearchParams({
+      page: page.toString(),
+      size: "10",
+    });
+
+    if (search) {
+      params.append("name", search);
+    }
+
+    // Add filter parameters
+    if (filters.productType && filters.productType !== 'all') {
+      // Map frontend filter values to backend ProductStatus enum
+      const statusMap = {
+        'current-biddable': 'OPEN',
+        'scheduled': 'SCHEDULED',
+        'closed': 'CLOSED'
+      };
       
-      // Build query parameters
-      const params = new URLSearchParams({
-        page: page.toString(),
-        size: '10' // You can adjust page size as needed
-      });
-      
-      if (search) {
-        params.append('name', search);
+      const backendStatus = statusMap[filters.productType];
+      if (backendStatus) {
+        params.append("productType", backendStatus);
       }
+    }
 
-      const response = await fetch(`http://localhost:8080/api/products/all?${params}`, {
+    if (filters.sortBy) {
+      params.append("sortBy", filters.sortBy);
+    }
+
+    const response = await fetch(
+      `http://localhost:8080/api/products/all?${params}`,
+      {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-      });
-
-      if (!response.ok) {
-        throw new Error("Error while fetching products");
       }
+    );
 
-      const data = await response.json();
-      setProducts(data.content);
-      setTotalPages(data.totalPages);
-      setCurrentPage(data.number);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error("Error while fetching products");
     }
-  };
+
+    const data = await response.json();
+    console.log(data);
+    setProducts(data.content);
+    setTotalPages(data.page.totalPages);
+    setCurrentPage(data.page.number);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setCurrentPage(0); // Reset to first page when searching
-    fetchProducts(0, searchQuery);
+    setCurrentPage(0);
+    fetchProducts(0, searchQuery, activeFilters);
   };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    fetchProducts(page, searchQuery);
+    fetchProducts(page, searchQuery, activeFilters);
+     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleClearSearch = () => {
     setSearchQuery("");
     setCurrentPage(0);
-    fetchProducts(0, "");
+    fetchProducts(0, "", activeFilters);
   };
 
   const handleAddProduct = () => {
@@ -76,24 +117,23 @@ const ProductsView = () => {
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     let startPage = Math.max(0, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 1);
-    
-    // Adjust start page if we're near the end
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(0, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   };
 
   useEffect(() => {
-    fetchProducts(0, "");
+    fetchProducts(0, "", activeFilters);
   }, []);
 
   return (
@@ -101,11 +141,10 @@ const ProductsView = () => {
       {/* Page */}
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8">
         <div className="w-full flex flex-col lg:flex-row items-start justify-between px-6 lg:px-28 gap-8">
-          
           {/* Filter section (left side) - Desktop */}
           <div className="hidden lg:block w-full lg:w-3/12">
             <div className="sticky top-8">
-              <SidebarFilter />
+              <SidebarFilter onFiltersApply={handleFiltersChange} />
             </div>
           </div>
 
@@ -123,18 +162,20 @@ const ProductsView = () => {
           {/* Mobile Filter Panel */}
           {showFilters && (
             <div className="lg:hidden w-full bg-white rounded-2xl shadow-xl p-6">
-              <SidebarFilter />
+              <SidebarFilter onFiltersApply={handleFiltersChange} />
             </div>
           )}
 
           {/* Product list section (right side) */}
           <div className="w-full lg:w-9/12">
             <div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8">
-              
               {/* Search and Add Product Section */}
               <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
                 {/* Search input */}
-                <form onSubmit={handleSearch} className="relative flex-1 max-w-[400px]">
+                <form
+                  onSubmit={handleSearch}
+                  className="relative flex-1 max-w-[400px]"
+                >
                   <div className="relative w-full">
                     {/* Search icon */}
                     <div className="absolute inset-y-0 start-0 flex items-center pl-4 pointer-events-none">
@@ -161,13 +202,15 @@ const ProductsView = () => {
                 </form>
 
                 {/* Add Product Button */}
-                <button
-                  onClick={handleAddProduct}
-                  className="flex items-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
-                >
-                  <FaPlus className="w-4 h-4" />
-                  <span>Add Product</span>
-                </button>
+                {isAuthenticated && (
+                  <button
+                    onClick={handleAddProduct}
+                    className="flex items-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                  >
+                    <FaPlus className="w-4 h-4" />
+                    <span>Add Product</span>
+                  </button>
+                )}
               </div>
 
               {/* Clear search button */}
@@ -195,8 +238,8 @@ const ProductsView = () => {
                 <div className="space-y-6 mb-8">
                   {products.length > 0 ? (
                     products.map((product) => (
-                      <div 
-                        key={product.id} 
+                      <div
+                        key={product.id}
                         className="transform hover:scale-[1.02] transition-transform duration-300"
                       >
                         <ProductCard product={product} />
@@ -208,10 +251,14 @@ const ProductsView = () => {
                         <FaSearch className="w-10 h-10 text-gray-400" />
                       </div>
                       <p className="text-gray-500 text-lg font-medium">
-                        {searchQuery ? "No products found for your search." : "No products to display."}
+                        {searchQuery
+                          ? "No products found for your search."
+                          : "No products to display."}
                       </p>
                       <p className="text-gray-400 mt-2">
-                        {searchQuery ? "Try adjusting your search terms." : "Products will appear here once they are available."}
+                        {searchQuery
+                          ? "Try adjusting your search terms."
+                          : "Products will appear here once they are available."}
                       </p>
                       {searchQuery && (
                         <button
@@ -250,8 +297,8 @@ const ProductsView = () => {
                             onClick={() => handlePageChange(page)}
                             className={`flex items-center justify-center px-4 h-10 leading-tight border border-gray-300 transition-all duration-200 ${
                               currentPage === page
-                                ? 'text-white bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600'
-                                : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700'
+                                ? "text-white bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                                : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
                             }`}
                           >
                             {page + 1}

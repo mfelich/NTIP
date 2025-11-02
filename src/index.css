@@ -8,7 +8,7 @@
 @layer components {
 
   body{
-    @apply font-sans bg-gradient-to-br from-purple-50;;
+    @apply font-sans bg-gradient-to-br from-purple-50;
   }
 
   .component-title {
@@ -54,6 +54,20 @@
 
 @theme {
   --font-poppins:"Manrope", sans-serif;
+}
+
+.line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 

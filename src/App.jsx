@@ -13,6 +13,7 @@ import ProductDetails from "./pages/ProductDetails";
 import AboutUs from "./pages/AboutUs";
 import MyProfile from "./pages/MyProfile";
 import CreateProduct from "./pages/CreateProduct";
+import AdminPanel from "./pages/AdminPanel";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -51,7 +52,8 @@ function App() {
     return (
       <div className="flex flex-col min-h-screen">
         {/* Header on top */}
-        <Header username={user?.username} onLogout={handleLogout} />
+        <Header userId={user?.id} username={user?.username} role={user?.role} onLogout={handleLogout} />
+
 
         {/* Main content */}
         <main className="flex-grow">{children}</main>
@@ -66,11 +68,12 @@ function App() {
     <BrowserRouter>
       <Layout>
         <Routes>
-          <Route path="/" element={<ProductsView />} />
+          <Route path="/" element={<ProductsView isAuthenticated={isAuthenticated}/>} />
           <Route path="/login" element={<LoginForm onLogin={handleLogin} />} />
           <Route path="/register" element={<RegisterForm />} />
           <Route path="/user-view" element={<UsersView />} />
           <Route path="/my-profile" element={<MyProfile />} />
+          <Route path="/admin-panel" element={user?.role === "ADMIN" ? (<AdminPanel />):(<LoginForm />)} />
           <Route
             path="/user-profile/:userId"
             element={

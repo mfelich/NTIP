@@ -69,7 +69,7 @@ const ProductCard = ({ product }) => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        setError("Morate biti prijavljeni da biste dodali u favorite");
+        setError("You need to be logged in to add in favorite");
         return;
       }
 
@@ -157,15 +157,16 @@ const ProductCard = ({ product }) => {
       maximumFractionDigits: 2,
     }).format(price);
   };
-
-  const formatDate = (dateString) => {
+const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
     });
-  };
+};
 
   const getStatusConfig = (status) => {
     const statusUpper = status?.toUpperCase();
@@ -260,9 +261,7 @@ const ProductCard = ({ product }) => {
                 {product?.name || "Product Name"}
               </h2>
               <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-4">
-                There are many variations of passages of Lorem Ipsum available,
-                but the majority have suffered alteration in some form, by
-                injected humour.
+              {product?.description || "No description available"}
               </p>
             </div>
 

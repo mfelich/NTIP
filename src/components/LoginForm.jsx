@@ -14,7 +14,6 @@ const LoginForm = ({ onLogin, onClose }) => {
   const location = useLocation();
   const modalRef = useRef();
 
-  // Handle click outside to close modal and return to previous URL
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -29,12 +28,8 @@ const LoginForm = ({ onLogin, onClose }) => {
   }, []);
 
   const handleClose = () => {
-    // Navigate back to the previous URL
-    if (location.key !== "default") {
-      navigate(-1);
-    } else {
       navigate('/');
-    }
+
     if (onClose) onClose();
   };
 
